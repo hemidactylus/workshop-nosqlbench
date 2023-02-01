@@ -23,7 +23,6 @@ In this repository you will find all material and references you need:
 - [Exercises](#create-your-astra-db-instance)
 - [Step-by-step guide](#before-you-start)
 - [DataStaxDevs Discord server](https://dtsx.io/discord) to keep in touch with us
-- [Our Q&A forum](https://community.datastax.com/) (think StackOverflow for Cassandra and all things DataStax)
 - [Slide deck](slides/datastaxdevs-workshop-benchmarking-nosqlbench.pdf)
 <!-- - [Workshop video](#) -->
 
@@ -92,13 +91,6 @@ for more coverage of the theory part. There, you will learn more about:
 
 > **No.** All materials, services and software used in this workshop is _free_.
 
-- Do you cover NoSQLBench 4 or 5?
-
-> Ah, I see you are a connoisseur. We focus on the newly-release **NoSQLBench 5**,
-> but we provide tips and remarks aimed at those still using nb4.
-<!-- 2L IF long -->
-> See [here](#version-used) for a bit of context.
-<!-- 2L ENDIF -->
 
 ### Homework
 
@@ -130,7 +122,6 @@ You need to:
 
 - create an Astra DB instance [as explained here](https://awesome-astra.github.io/docs/pages/astra/create-instance/#c-procedure), with **database name** = `workshops` and **keyspace name** = `nbkeyspace`;
 - _(this will happen automatically with the previous one)_ generate and retrieve a DB Token [as explained here](https://awesome-astra.github.io/docs/pages/astra/create-token/#c-procedure). **Important**: use the role _"DB Administrator"_ if manually creating the token.
-- generate and download a Secure Connect Bundle [as explained here](https://awesome-astra.github.io/docs/pages/astra/download-scb/#c-procedure);
 
 Moreover, keep the Astra DB dashboard open: it will be useful later. In particular, locate the
 Health tab and the CQL Console.
@@ -181,8 +172,9 @@ you can obtain the latest stable binary (it's a few hundred megabytes) with
 <!-- 2L ELIF short -->
 To download NoSQLBench, type or paste this command in your Gitpod console:
 <!-- 2L ENDIF -->
+
 ```bash
-curl -L -O https://github.com/nosqlbench/nosqlbench/releases/download/nosqlbench-4.17.19/nb5
+curl -L -O https://github.com/nosqlbench/nosqlbench/releases/latest/download/nb5
 ```
 
 <!-- 2L IF long -->
@@ -191,16 +183,18 @@ out of convenience, to a directory which is part of the search path:
 <!-- 2L ELIF short -->
 then make it executable and move it to a better place:
 <!-- 2L ENDIF -->
+
 ```bash
 chmod +x nb5
 sudo mv nb5 /usr/local/bin/
 ```
 
 Ok, now check that the program starts: invoking
+
 ```bash
 nb5 --version
 ```
-should output the program version (something like `4.17.19` or higher).
+should output the program version (something like `5.17.0` or higher).
 
 <!-- 2L IF long -->
 > You will probably see a message like `Picked up JAVA_TOOL_OPTIONS ...` when
@@ -214,68 +208,27 @@ should output the program version (something like `4.17.19` or higher).
 
 <!-- 2L ENDIF -->
 
-#### Version used
 
-This workshop is built for the newly-released NoSQLBench 5.
-<!-- 2L IF long -->
-Compared to
-version 4, there are many differences both under the hood and for the user.
-We will provide tips and remarks to help users of version 4 as well throughout
-the following.
-
-<details><summary>Tell me more</summary>
-
-NoSQLBench 5 comes with a completely redesigned architecture for drivers,
-which grants _all_ drivers (present and future) a set of nice features for free
-and makes it easier to develop new ones.
-
-On a more user-facing side, among several improvements,
-the error handling logic has been enhanced; the workload
-`yaml` syntax has been streamlined; new and upgraded drivers are available
-for various databases.
-
-> **Tip**: in the NoSQLBench repo itself, you can find
-> [plenty of information](https://github.com/nosqlbench/nosqlbench/blob/main/adapters-api/src/main/resources/workload_definition/README.md)
-> on the specifications for the workload `yaml` syntax.
-
-Great care has been taken to maintain backward compatibility (e.g. in the
-workload yaml syntax); in the following, some of the most relevant
-changes will be highlighted, especially concerning the workload syntax,
-to support users of version 4 as well.
-
-</details>
-<!-- 2L ENDIF -->
-
-
-### Upload the Secure Connect Bundle to Gitpod
+### Download the DB Secure Connect Bundle
 
 <!-- 2L IF long -->
-NoSQLBench will need to connect to your Astra DB database: to do so, the
-Secure Connect Bundle zip file must be uploaded
-to your Gitpod environment.
+NoSQLBench will need to connect to your Astra DB database: a
+"Secure Connect Bundle" zip file must be provided to do so.
 <!-- 2L ENDIF -->
 
-Locate, with the file explorer on your computer, the bundle file that
-you downloaded earlier (it should be called
-`secure-connect-workshops.zip`)
-and simply **drag-and-drop** it to the file navigator panel
-("Explorer") on the left of the Gitpod view.
+Get a `curl` or `wget` command to download the Secure Connect Bundle
+from the Astra UI [as explained here](https://awesome-astra.github.io/docs/pages/astra/download-scb/#c-procedure) and run it in the workshop directory: you will
+see a `secure-connect-workshops.zip` file has been downloaded:
 
-<details><summary>Show me</summary>
-    <img src="https://github.com/datastaxdevs/workshop-nosqlbench/raw/main/images/gitpod_uploading_bundle_1_annotated.png?raw=true" />
-</details>
-
-Once you drop it you will see it listed in the file explorer itself.
-As a check, you can issue the command
 ```bash
 ls /workspace/workshop-nosqlbench/secure*zip -lh
 ```
 
-so that you get the _absolute path to your bundle file_ (and also verify that it is
+This will give you the _absolute path to your bundle file_
+(at the same time verifying that it is
 the correct size, about 12-13 KB).
 <!-- 2L IF long -->
-As an aside, note that, as per best practices with NoSQLBench, (relative)
-paths to files would start with `./`.
+_As a side note: per NoSQLBench best practices relative paths to files would have to start with `./` instead._
 <!-- 2L ENDIF -->
 
 <details><summary>Show me</summary>
@@ -293,6 +246,7 @@ a `.env` file, which will make your life easier later.
 
 Copy the provided template file to a new one and open it in the Gitpod
 file editor:
+
 ```bash
 cp .env.sample .env
 gp open .env
@@ -308,11 +262,13 @@ and, if necessary, adjust the other variables.
 </details>
 
 Now, source this file to make the definitions therein available to this shell:
+
 ```bash
 . .env
 ```
 
 To check that the file has been sourced, you can try with:
+
 ```bash
 echo ${ASTRA_DB_KEYSPACE_NAME}
 ```
@@ -345,6 +301,7 @@ nb5 cql-keyvalue2 astra                 \
     driver=stdout                       \
     rampup-cycles=10                    \
     main-cycles=10                      \
+    threads=1                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}
 ```
 
@@ -353,10 +310,9 @@ one `CREATE TABLE`, then ten `INSERT`s
 and then another ten between `SELECT`s and further `INSERT`s.
 
 > **Note**: we will use workload `cql-keyvalue2` throughout. This is functionally
-> identical to the `cql-keyvalue` workload but is expressed in the newer syntax for
-> `yaml` workloads, which comes handy when later dissecting its content.
-> If you are working with NoSQLBench 4, remember to drop the trailing `2`
-> from the workload name in the following!
+> identical to the legacy `cql-keyvalue` workload but is expressed in the
+> modern syntax for `yaml` workloads, which comes handy
+> when examining its structure later.
 
 <!-- 2L IF long -->
 These three blocks correspond
@@ -380,6 +336,7 @@ nb5 cql-keyvalue2 astra                 \
     driver=stdout                       \
     rampup-cycles=10                    \
     main-cycles=10                      \
+    threads=1                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}
 ```
 
@@ -395,7 +352,7 @@ is the output identical to the previous run down to the actual "random" values?
 <!-- 2L ENDIF -->
 
 You can also peek at the `logs` directory now: it is created automatically and
-populated with some information from the benchmark at each execution of `nb`.
+populated with relevant benchmark information and results on each execution of `nb5`.
 
 
 ### Benchmark your Astra DB
@@ -413,7 +370,7 @@ for that to work, you will provide all connection parameters set up earlier.
 
 <!-- 2L IF long -->
 > Note: for this workload, as you could check by examining its definition
-> (see the _Inspect "cql-keyvalue"_ section below), you could leave the driver
+> (see the _Inspect "cql-keyvalue2"_ section below), you could leave the driver
 > specification out since `cql` is the default.
 
 <!-- 2L ENDIF -->
@@ -426,9 +383,10 @@ in order to collect enough statistical support for the results.
 > (with the `cyclerate` parameter). This is mainly because often the goal
 > of a benchmark is to verify whether the system can withstand
 > a _known, controlled_ workload;
-> but in this case there are also other practical reasons: (1) you don't want to consume
-> too much of your Free Tier monthly allowance in this "functional demo"; moreover,
-> (2) if you are running on the Free Tier you may otherwise hit the
+> but in this case there are also other practical reasons:
+> (1) in this "functional demo", you don't want to consume
+> too much of your otherwise pretty generous Free Tier monthly allowance; moreover,
+> (2) if you are running on the Free Tier you may unknowingly hit the
 > guardrails and the performance limitations specific to free-tier Astra databases.
  
 <!-- 2L ENDIF -->
@@ -446,6 +404,7 @@ nb5 cql-keyvalue2                                                         \
     driver=cql                                                            \
     main-cycles=9000                                                      \
     rampup-cycles=9000                                                    \
+    threads=10                                                            \
     errors='OverloadedException:warn'                                     \
     --progress console:5s                                                 \
     --log-histograms 'histogram_hdr_data.log:.*.main.result.*:20s'        \
@@ -468,20 +427,15 @@ Note that some of the parameters (e.g. `keyspace`) are workload-specific.
 | `driver=cql`              | driver to use (CQL, for AstraDB/Cassandra)
 | `main-cycles`             | how many operations in the "main" phase
 | `rampup-cycles`           | how many operations in the "rampup" phase
+| `threads`                 | how many threads to use to generate the requests
 | `errors`                  | behaviour if errors occur during benchmarking
 | `--progress console`      | frequency of console prints
 | `--log-histograms`        | write data to HDR file (see later)
 | `--log-histostats`        | write some basic stats to a file (see later)
 
-This way of invoking `nb`, the ["named scenario"](https://docs.nosqlbench.io/docs/workloads_101/11-named-scenarios/)
+This way of invoking `nb5`, the ["named scenario"](https://docs.nosqlbench.io/workloads_101/11-named-scenarios/)
 way, is not the only one: it is also possible to have a finer-grained control over what activities should
-run with a full-fledged [CLI scripting](https://docs.nosqlbench.io/docs/reference/cli-scripting/) syntax.
-
->**Note**: the syntax of the `errors` parameter has been improved in NoSQLBench 5
-> to allow for a [finer control](https://docs.nosqlbench.io/docs/reference/error-handlers/) (with multiple directives,
-> such as `errors='NoNodeAvailable.*:ignore;InvalidQueryException.*:counter;OverloadedException:warn'`).
-> On version 4 you should revert to a simpler parameter,
-> such as `errors=count`, instead of the above.
+run with a full-fledged [CLI scripting](https://docs.nosqlbench.io/reference/cli-scripting/) syntax.
 
 </details>
 
@@ -490,11 +444,10 @@ run with a full-fledged [CLI scripting](https://docs.nosqlbench.io/docs/referenc
 > the command line above would change a little: the scenario would be `default`,
 > you would need to provide a parameter such as `hosts=192.168.1.1,192.168.1.2`,
 > and you would have additionally to provide a parameter `localdc=datacenter1`
-> (change to reflect the name of one of your Cassandra datacenters). The latter
-> is required starting from NoSQLBench 5, but is a good practice with earlier versions too.
+> (reflecting the name of one of your Cassandra datacenters).
 > Further, there would be _no_ `secureconnectbundle` parameter. As for username and password,
 > ... well, that depends on how the Cassandra cluster is configured.
-> As far as benchmark results are concerned, in the next steps you will have to
+> As far as benchmark results are concerned, in the next steps you would have to
 > look at metric with "default" in their name instead of "astra".
 > Note that NoSQLBench uses the very same CQL drivers to
 > access the database, regardless of whether Astra DB or a Cassandra cluster.
@@ -508,7 +461,7 @@ information on how it responds. You will see a **console output** keeping you
 updated on the progress of the
 currently-running phase (`schema`/`rampup`/`main`).
 <!-- 2L ELIF short -->
-The benchmark should last about ten minutes, with the progress being
+The benchmark should last about six minutes, with the progress being
 printed on the console as it proceeds.
 <!-- 2L ENDIF -->
 
@@ -516,9 +469,8 @@ printed on the console as it proceeds.
 > If the execution fails with,
 > `"Cannot construct cloud config from the cloudConfigUrl ..."`,
 > chances are your (free-tier) database is currently in
-> [Standby status](https://docs.datastax.com/en/astra/docs/db-status.html#_standby).
-> To resume it, open its Health tab or the CQL Console tab in the Astra DB UI
-> and wait two or three minutes before retrying.
+> [Hibernated status](https://awesome-astra.github.io/docs/pages/astra/resume-db/).
+> You can "Resume" it from the Astra Web UI (or using the Astra CLI).
 
 <!-- 2L ENDIF -->
 
@@ -589,8 +541,8 @@ DESC TABLE keyvalue;
 Surprise! As a matter of fact both columns are of type `TEXT` (that is,
 variable-length strings). Indeed, most key-value stores admit string keys
 and (unless specific schemas are enforced) the values are also either binary blobs
-or ASCII sequences: this workload could then be adapted to
-benchmarking other key-value databases.
+or ASCII sequences: since it uses strings, then, this workload is ready
+to be adapted to benchmarking other key-value databases.
 <!-- 2L ELIF short -->
 Oh, looks like both the key and the value columns are of type `TEXT`:
 good for adapting this ready-made benchmark to other key/value stores.
@@ -680,7 +632,7 @@ directory (which is created automatically if not present). The on-screen
 summary is a shortened form of the data found in the summary files there.
 
 Now open the most recent `*.summary` file in that directory, corresponding
-to the `nb` invocation that just completed.
+to the `nb5` invocation that just completed.
 Find the metric called `cqlkeyvalue2_astra_main.result-success`: this
 corresponds to events of the type _"a command was issued to the database during_
 _the_ main _phase and succeeded (and the time needed for it to complete, as seen from the client_
@@ -713,7 +665,7 @@ This tells you the total count and the per-minute rate
 
 NoSQLBench keeps track of count/timing information for many
 operations, which range from substitution of variables in the
-workload commands to actual sending of an I/O operation to the database.
+workload consrtuction to the actual sending of an I/O operation to the database.
 <!-- 2L ENDIF -->
 
 #### Additional "histostats" datafile
@@ -806,6 +758,7 @@ and look at the `SampleData*.png` plots that are generated:
 - the "base plot" is the full collected histogram of the chosen metric;
 - the "stability plot" plots measurements from each time window separately, to help assessing whether the _main_ phase is really a steady state;
 - the "percentile plot" reformulates the histogram in terms of percentiles.
+
 <!-- 2L ENDIF -->
 
 <details><summary>Show me the plots generated by the HDR file</summary>
@@ -859,6 +812,7 @@ nb5 cql-keyvalue2                                                         \
     secureconnectbundle=${ASTRA_DB_BUNDLE_PATH}                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}                                    \
     cyclerate=50                                                          \
+    threads=10                                                            \
     rampup-cycles=15000                                                   \
     main-cycles=15000                                                     \
     errors='OverloadedException:warn'                                     \
@@ -1018,7 +972,7 @@ This part is about how workloads are defined.
 > **Tip**: feel free to interrupt the previous benchmark, if it still runs,
 > with Ctrl-C. You won't need it anymore.
 
-### Inspect "cql-keyvalue"
+### Inspect "cql-keyvalue2"
 
 Ask NoSQLBench to dump to a file the `yaml` defining the workload
 you just ran:
