@@ -221,7 +221,6 @@ nb5 cql-keyvalue2 astra                 \
     driver=stdout                       \
     rampup-cycles=10                    \
     main-cycles=10                      \
-    threads=1                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}
 ```
 
@@ -242,7 +241,6 @@ nb5 cql-keyvalue2 astra                 \
     driver=stdout                       \
     rampup-cycles=10                    \
     main-cycles=10                      \
-    threads=1                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}
 ```
 
@@ -277,7 +275,6 @@ nb5 cql-keyvalue2                                                         \
     driver=cql                                                            \
     main-cycles=9000                                                      \
     rampup-cycles=9000                                                    \
-    threads=10                                                            \
     errors='OverloadedException:warn'                                     \
     --progress console:5s                                                 \
     --log-histograms 'histogram_hdr_data.log:.*.main.result.*:20s'        \
@@ -300,7 +297,6 @@ Note that some of the parameters (e.g. `keyspace`) are workload-specific.
 | `driver=cql`              | driver to use (CQL, for AstraDB/Cassandra)
 | `main-cycles`             | how many operations in the "main" phase
 | `rampup-cycles`           | how many operations in the "rampup" phase
-| `threads`                 | how many threads to use to generate the requests
 | `errors`                  | behaviour if errors occur during benchmarking
 | `--progress console`      | frequency of console prints
 | `--log-histograms`        | write data to HDR file (see later)
@@ -485,7 +481,6 @@ nb5 cql-keyvalue2                                                         \
     secureconnectbundle=${ASTRA_DB_BUNDLE_PATH}                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}                                    \
     cyclerate=50                                                          \
-    threads=10                                                            \
     rampup-cycles=15000                                                   \
     main-cycles=15000                                                     \
     errors='OverloadedException:warn'                                     \
@@ -586,13 +581,6 @@ You can open it (clicking on it in the Gitpod explorer or by running
 Have a look at the file and try to identify its structure and the various
 phases the benchmark is organized into.
 
-There are profound differences in the way the same workload is expressed
-in the NoSQLBench 4 yaml file and the NoSQLBench 5 format.
-
-<details><summary>Show me the differences</summary>
-    <img src="https://github.com/datastaxdevs/workshop-nosqlbench/raw/main/images/cql-keyvalue-nb4-vs-nb5.png?raw=true" />
-</details>
-
 ### Play with workloads
 
 A good way to understand workload construction is to start from simple ones.
@@ -601,7 +589,6 @@ To run the following examples please go to the appropriate subdirectory:
 ```
 cd workloads
 ```
-
 
 #### Example 1: talking about food
 

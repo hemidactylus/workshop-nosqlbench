@@ -35,9 +35,9 @@ it sort-of-writes data to them, and it sort-of-performs the reads.
 
 #### Useful commands, reference, advice
 
-Info on the [`ratio` parameter](https://docs.nosqlbench.io/docs/reference/core-op-params/#ratio).
+Info on the [`ratio` parameter](https://docs.nosqlbench.io/reference/core-op-params/#ratio).
 
-[Documentation on bindings](https://docs.nosqlbench.io/docs/bindings/binding-concepts/): you can also search for the particular functions employed in this example.
+[Documentation on bindings](https://docs.nosqlbench.io/bindings/binding-concepts/): you can also search for the particular functions employed in this example.
 
 A possible way to run the workload with Astra DB would be similar to:
 
@@ -50,7 +50,6 @@ nb5 homework-workload astra                   \
   keyspace=${ASTRA_DB_KEYSPACE_NAME}          \
   rampup-cycles=1000                          \
   main-cycles=1000                            \
-  errors=count                                \
   cyclerate=50                                \
   --progress console:5s
 ```
@@ -66,7 +65,6 @@ nb5 homework-workload astra \
   keyspace=nbkeyspace       \
   rampup-cycles=1000        \
   main-cycles=1000          \
-  errors=count              \
   cyclerate=50              \
   --progress console:5s
 ```

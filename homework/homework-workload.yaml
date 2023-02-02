@@ -44,6 +44,7 @@ blocks:
             ({???}, {???}, {???});
         params:
           prepared: true
+          cl: LOCAL_QUORUM
       write-images:
         stmt: |
           INSERT INTO <<keyspace:homework>>.himages
@@ -52,6 +53,7 @@ blocks:
             ({???}, {???}, {???});
         params:
           prepared: true
+          cl: LOCAL_QUORUM
   main:
     ops:
       read-user:
@@ -60,6 +62,7 @@ blocks:
             WHERE userid={???};
         params:
           prepared: true
+          cl: LOCAL_QUORUM
       read-images:
         stmt: |
           SELECT * FROM <<keyspace:homework>>.himages
@@ -67,3 +70,4 @@ blocks:
             AND imageid={???};
         params:
           prepared: true
+          cl: LOCAL_QUORUM

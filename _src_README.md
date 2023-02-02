@@ -301,7 +301,6 @@ nb5 cql-keyvalue2 astra                 \
     driver=stdout                       \
     rampup-cycles=10                    \
     main-cycles=10                      \
-    threads=1                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}
 ```
 
@@ -336,7 +335,6 @@ nb5 cql-keyvalue2 astra                 \
     driver=stdout                       \
     rampup-cycles=10                    \
     main-cycles=10                      \
-    threads=1                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}
 ```
 
@@ -404,7 +402,6 @@ nb5 cql-keyvalue2                                                         \
     driver=cql                                                            \
     main-cycles=9000                                                      \
     rampup-cycles=9000                                                    \
-    threads=10                                                            \
     errors='OverloadedException:warn'                                     \
     --progress console:5s                                                 \
     --log-histograms 'histogram_hdr_data.log:.*.main.result.*:20s'        \
@@ -427,7 +424,6 @@ Note that some of the parameters (e.g. `keyspace`) are workload-specific.
 | `driver=cql`              | driver to use (CQL, for AstraDB/Cassandra)
 | `main-cycles`             | how many operations in the "main" phase
 | `rampup-cycles`           | how many operations in the "rampup" phase
-| `threads`                 | how many threads to use to generate the requests
 | `errors`                  | behaviour if errors occur during benchmarking
 | `--progress console`      | frequency of console prints
 | `--log-histograms`        | write data to HDR file (see later)
@@ -812,7 +808,6 @@ nb5 cql-keyvalue2                                                         \
     secureconnectbundle=${ASTRA_DB_BUNDLE_PATH}                           \
     keyspace=${ASTRA_DB_KEYSPACE_NAME}                                    \
     cyclerate=50                                                          \
-    threads=10                                                            \
     rampup-cycles=15000                                                   \
     main-cycles=15000                                                     \
     errors='OverloadedException:warn'                                     \
@@ -826,12 +821,6 @@ as Docker images are being downloaded and the containers are started.
 Then, successful start of the Grafana dashboard
 should be logged, at which point the usual `cql-keyvalue2` workload will start.
 
-> *Note*: on some versions of NoSQLBench 5 you may see an error such as
-> `Java HttpClient was not authorized, [...] :WWW-Authenticate header missing for response code 401`.
-> This is due to the Grafana server not complying with the HTTP 401 specifications, and can be fixed
-> by running the script `./_grafana_docker_key_fetcher.sh` and then re-starting the above `nb5` command.
-> (the script manually generates an API key for interacting with Grafana, storing it where then `nb5` expects to find it.)
-
 <!-- 2L ENDIF -->
 
 <details><summary>Show me the run with Docker metrics</summary>
@@ -842,6 +831,21 @@ should be logged, at which point the usual `cql-keyvalue2` workload will start.
 > It is possible that Gitpod will detect new services running on some local ports
 > and automatically open the Grafana dashboard in its mini-browser. Better to
 > ignore it and re-open the URL in a new, actual browser tab as instructed below.
+
+<details><summary>Click here if Grafana appears to have no data</summary>
+
+On some versions of NoSQLBench 5 you may see an error such as
+`Java HttpClient was not authorized, [...] :WWW-Authenticate header missing for response code 401` and, correspondingly, see no data (and no dashboards) in Grafana.
+This is due to the Grafana server not complying with the HTTP 401 specifications, and can be fixed
+by running the script `./_grafana_docker_key_fetcher.sh` and then re-starting the above `nb5` command.
+(the script manually generates an API key for interacting with Grafana, storing it where then `nb5` expects to find it.)
+
+If this is not enough, likely there are spurious leftover
+from a faulty setup from older NoSQLBench versions:
+the ultimate fix is then to
+stop and remove the Docker containers, then purge the content in `~/.nosqlbench` and re-launch the command after upgrading to the newest version.
+
+</details>
 
 <!-- 2L ENDIF -->
 
@@ -962,7 +966,7 @@ is made of.
 Phases, in turn, consist of several statements that the driver will know how to
 "execute" (i.e. send to the target system as operations to execute).
 
-There is [quite some freedom](https://docs.nosqlbench.io/docs/workloads_101/00-designing-workloads/)
+There is [quite some freedom](https://docs.nosqlbench.io/workloads_101/00-designing-workloads/)
 in creating workloads: in the following you will just explore some of
 this space. Look into the reference documentation for more.
 <!-- 2L ELIF short -->
@@ -993,43 +997,22 @@ You can open it (clicking on it in the Gitpod explorer or by running
 This is not a line-by-line analysis, but broadly speaking
 there are three important sections:
 
-- **scenarios**. This defines which _phases_ constitute each scenario. More specifically, each phase is expressed as an inline script, which in turn follows the [NoSQLBench CLI scripting syntax](https://docs.nosqlbench.io/docs/reference/cli-scripting/).
-- **bindings**. Each [_binding_](https://docs.nosqlbench.io/docs/bindings/) defines a particular recipe to generate a sequence of pseudo-random values. Emphasis is on the "pseudo", since bindings are (usually) _fully deterministic_, reproducible, mappings of cycle numbers to values. The sequence of "keys" produced as the the _rampup_ phase of key-value workload unfolds, for instance, is defined here by the `seq_key` binding. Bindings are defined using a functional compositional approach, starting from a set of available building blocks, and can generate values of many different data types.
-- **blocks**. Here, groups of "statements" (better: _operations_) are defined for use within scenarios. Within the body of operations, [bindings](https://docs.nosqlbench.io/docs/workloads_101/03-data-bindings/) can be employed (`{binding_name}`), which implies they will take values along the generated sequence as the cycle number unfolds; similarly, [template parameters](https://docs.nosqlbench.io/docs/workloads_101/09-template-params/) can be used (`<<parameter_name:default>>`, or `TEMPLATE(parameter_name,default)`) to be replaced according to settings passed through the command-line or when defining the scenario composition in the "scenarios" section.
+- **scenarios**. This defines which _phases_ constitute each scenario. More specifically, each phase is expressed as an inline script, which in turn follows the [NoSQLBench CLI scripting syntax](https://docs.nosqlbench.io/reference/cli-scripting/).
+- **bindings**. Each [_binding_](https://docs.nosqlbench.io/bindings/) defines a particular recipe to generate a sequence of pseudo-random values. Emphasis is on the "pseudo", since bindings are (usually) _fully deterministic_, reproducible, mappings of cycle numbers to values. The sequence of "keys" produced as the the _rampup_ phase of key-value workload unfolds, for instance, is defined here by the `seq_key` binding. Bindings are defined using a functional compositional approach, starting from a set of available building blocks, and can generate values of many different data types.
+- **blocks**. Here, groups of "statements" (better: _operations_) are defined for use within scenarios. Within the body of operations, [bindings](https://docs.nosqlbench.io/workloads_101/03-data-bindings/) can be employed (`{binding_name}`), which implies they will take values along the generated sequence as the cycle number unfolds; similarly, [template parameters](https://docs.nosqlbench.io/workloads_101/09-template-params/) can be used (`<<parameter_name:default>>`, or `TEMPLATE(parameter_name,default)`) to be replaced according to settings passed through the command-line or when defining the scenario composition in the "scenarios" section.
 
 Try to track what happens when you invoke the `cql-keyvalue2 astra` workload/scenario _(Note: this focuses on the version 5 syntax)_:
-1. the _schema_ phase is invoked: it consists of running, with the `cql` driver, the blocks whose naming [matches the selector](https://docs.nosqlbench.io/docs/workloads_101/05-op-tags/#tag-filtering-rules) `tags==block:schema`. Also some parameters are passed to the execution. (_Note that the schema phase differs between an Astra DB target and a regular Cassandra target, while later phases do not_.)
+1. the _schema_ phase is invoked: it consists of running, with the `cql` driver, the blocks whose naming [matches the selector](https://docs.nosqlbench.io/workloads_101/05-op-tags/) `tags==block:schema`. Also some parameters are passed to the execution. (_Note that the schema phase differs between an Astra DB target and a regular Cassandra target, while later phases do not_.)
 2. When _schema_ is over, the _rampup_ is started. This runs all blocks matching `tags==block:rampup`, and passes the parameters `threads` and `cycles`. The latter will preferrably read the value passed through command-line (look for `rampup-cycles=...` in the benchmark command you ran earlier), with a default.
-3. Running _rampup_ then entails running the block with the tag `block: rampup` (the tag is [automatically attached to the block](https://github.com/nosqlbench/nosqlbench/blob/main/adapters-api/src/main/resources/workload_definition/workload_structure.md#blocks) from its name). In the block, a [consistency level](https://docs.datastax.com/en/dse/5.1/cql/cql/cql_reference/cqlsh_commands/cqlshConsistency.html) is defined, again using template parameters. The statement (or operation) that is repeatedly executed is an `INSERT` statement, which writes rows to a DB table:
+3. Running _rampup_ then entails running the block with the tag `block: rampup` (the tag is automatically attached to the block). In the block, a [consistency level](https://docs.datastax.com/en/dse/5.1/cql/cql/cql_reference/cqlsh_commands/cqlshConsistency.html) is defined, again using template parameters. The statement (or operation) that is repeatedly executed is an `INSERT` statement, which writes rows to a DB table:
 4. The `INSERT` targets a table in a keyspace whose name (as well as the table name itself) can be provided through a command-line parameter (compare with the `keyspace=...` part of the benchmark command you ran earlier). The default keyspace is `baselines`.
 5. In this `INSERT` statement, also the bindings `seq_key` and `seq_value` occur: that is, you can imagine a loop with an index `i` looping over `rampup-cycles` integer values: each time the `INSERT` statement is executed, "key" and "value" will be equal to the corresponding mapping functions "evaluated at `i`".
-6. When these `INSERT` statements are all executed, the _rampup_ phase will be done and the execution will turn to the _main_ phase. The tag filtering expression (`tags==block:"main.*"`) this time matches _two_ operations. They will be combined in an alternating fashion, according to their `ratio` (see [here](https://docs.nosqlbench.io/docs/reference/core-op-params/#ratio) for details), with the final result, in this case, of reproducing a mixed read-write workload.
+6. When these `INSERT` statements are all executed, the _rampup_ phase will be done and the execution will turn to the _main_ phase. The tag filtering expression (`tags==block:"main.*"`) this time matches _two_ operations. They will be combined in an alternating fashion, according to their `ratio` (see [here](https://docs.nosqlbench.io/reference/core-op-params/#ratio) for details), with the final result, in this case, of reproducing a mixed read-write workload.
 7. The scenario will then have completed.
 <!-- 2L ELIF short -->
 Have a look at the file and try to identify its structure and the various
 phases the benchmark is organized into.
 <!-- 2L ENDIF -->
-
-<!-- 2L IF long -->
-_Note_: The yaml file corresponding to this workload (embedded in NoSQLBench)
-is an egregious example of the improvements in the workload syntax offered in version 5.
-You can inspect the yaml files shipping with nb4 and nb5 (both
-[provided in this repo](workloads/cql-keyvalue-versions/)
-for your convenience) and observe the differences:
-
-- One can do without "tags" and, since lists are generally replaced by key-value (ordered) maps, use the keys themselves to refer to blocks of operations in defining phases;
-<!-- - In a style called "type-and-target", the fact that, for example, a statement is _prepared_ (a Cassandra-specific concept) is expressed directly with the key/value relationship in a map; -->
-- Operation-specific parameters (such as `ratio`) are next to the statement body, and in general information logically pertaining to the same item stays packed together;
-- The map-based syntax allows for a way more synthetic workload definition yaml.
-
-<!-- 2L ELIF short -->
-There are profound differences in the way the same workload is expressed
-in the NoSQLBench 4 yaml file and the NoSQLBench 5 format.
-<!-- 2L ENDIF -->
-
-<details><summary>Show me the differences</summary>
-    <img src="https://github.com/datastaxdevs/workshop-nosqlbench/raw/main/images/cql-keyvalue-nb4-vs-nb5.png?raw=true" />
-</details>
 
 ### Play with workloads
 
@@ -1040,22 +1023,14 @@ To run the following examples please go to the appropriate subdirectory:
 cd workloads
 ```
 
-<!-- 2L IF long -->
-_Note_: The two example yaml files that follow are also provided
-in the "nb4 list-based syntax" (as `*-nb4.yaml` files).
-Just keep in mind that modern `nb5` can run any format, while
-the modern map-based syntax is not guaranteed to be
-parseable by NoSQLBench 4.
-<!-- 2L ENDIF -->
-
 #### Example 1: talking about food
 
 <!-- 2L IF long -->
 Take a look at `simple-workload.yaml`. This defines two
-[operations](https://docs.nosqlbench.io/docs/workloads_101/01-op-templates/)
+[operations](https://docs.nosqlbench.io/workloads_101/01-op-templates/)
 (formerly called "statements") that are to be interleaved according
 to their 
-[ratio](https://docs.nosqlbench.io/docs/reference/core-op-params/#ratio)
+[ratio](https://docs.nosqlbench.io/reference/core-op-params/#ratio)
 parameter. As you saw earlier, there are parts of the
 operation body that depend on the cycle number
 as specified by the binding functions defined under `bindings`.
@@ -1087,15 +1062,15 @@ the first such function is the cycle number, so for instance the binding:
 ```
 
 means: the `multiplier` binding will be a function that takes the cycle number as input,
-[adds a pseudorandom 0-50 value](https://docs.nosqlbench.io/docs/bindings/funcref-general/#addhashrange)
-to it, takes the [modulo-20](https://docs.nosqlbench.io/docs/bindings/funcref-general/#mod) of the result,
-[adjusts it](https://docs.nosqlbench.io/docs/bindings/funcref-general/#clamp)
+[adds a pseudorandom 0-50 value](https://docs.nosqlbench.io/bindings/funcref-general/#addhashrange)
+to it, takes the [modulo-20](https://docs.nosqlbench.io/bindings/funcref-general/#mod) of the result,
+[adjusts it](https://docs.nosqlbench.io/bindings/funcref-general/#clamp)
 so that it lies within the [2, 20] interval, and finally
-produces the [spelled-out name in words](https://docs.nosqlbench.io/docs/bindings/funcref-premade/#numbernametostring)
+produces the [spelled-out name in words](https://docs.nosqlbench.io/bindings/funcref-premade/#numbernametostring)
 of the resulting number.
 
 For a general introduction to bindings and a list of the (many) available
-functions, please see [here](https://docs.nosqlbench.io/docs/bindings/binding-concepts/). You can also find several valueble example "recipes"
+functions, please see [here](https://docs.nosqlbench.io/bindings/binding-concepts/). You can also find several valueble example "recipes"
 in the [`/nbr/src/main/resources/examples`](https://github.com/nosqlbench/nosqlbench/tree/main/nbr/src/main/resources/examples)
 directory of NoSQLBench source code.
 <!-- 2L ELIF short -->
@@ -1110,7 +1085,7 @@ them.
 The previous example, albeit silly, was meant to show the basics of building
 workloads.
 An important feature is the possibility to package several workflows into a
-single sequence that can then be run at once (["named scenarios"](https://docs.nosqlbench.io/docs/workloads_101/11-named-scenarios/)).
+single sequence that can then be run at once (["named scenarios"](https://docs.nosqlbench.io/workloads_101/11-named-scenarios/)).
 
 The need to perform a _schema_ initialization and to execute a _rampup_ phase
 before doing the actual _main_ benchmarking is, as discussed earlier,
@@ -1144,7 +1119,7 @@ inside the workload specs. Try to re-run the workload adding
 > values so that the sum of the `ratio`
 > parameters for the operations in `main`
 > divides exactly the number of cycles
-> in that phase. This sum constitutes the (["stride"](https://docs.nosqlbench.io/docs/reference/standard-metrics/#strides)).
+> in that phase. This sum constitutes the (["stride"](https://docs.nosqlbench.io/reference/standard-metrics/#strides)).
 
 <!-- 2L ELIF short -->
 Notable features of this workload are its multi-phase structure
